@@ -126,8 +126,18 @@ void listen_for_messages() {
                     sscanf(buffer + 1, "%s", incomming_sender);
                     sprintf(temp, "*** %s has joined in the chat ***", incomming_sender);
                     display_incoming_message("", temp);
+                    break;
                 }
-                    
+
+                case QUIT:
+                {
+                    char temp[1024];
+
+                    sscanf(buffer + 1, "%s", incomming_sender);
+                    sprintf(temp, "*** %s has left the chat ***", incomming_sender);
+                    display_incoming_message("", temp);
+                    break;
+                }
 
                 default:
                     break;

@@ -112,3 +112,13 @@ int send_message(const char *msg) {
 
     return 0;
 }
+
+int send_quit() {
+    extern char user_logged_in[];
+
+    flush_buffer();
+    sprintf(buffer, "%c%c%c%s", QUIT, (char)user_idx, (char)room_idx, user_logged_in);
+    sendto(sockfd, buffer, strlen(buffer), 0, (const struct sockaddr *)&servaddr, sizeof(servaddr));
+
+    return 0;
+}

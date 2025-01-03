@@ -18,7 +18,8 @@ typedef enum {
 
     // common
     MESSAGE,
-    JOIN_NOTI
+    JOIN_NOTI,
+    QUIT
 } flag_t;
 
 typedef enum {

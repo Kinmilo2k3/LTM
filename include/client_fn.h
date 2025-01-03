@@ -15,5 +15,6 @@ int send_create_account_request(const char *username, const char *password);
 int send_join_request();
 int request_room_code();
 int send_message(const char *msg);
+int send_quit();
 
 #endif

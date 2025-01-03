@@ -271,6 +271,19 @@ void handle_message(char *buffer) {
     broad_cast_room_except(rooms[room_idx], user_idx, buffer);
 }
 
+void handle_quit(char *buffer) {
+    int user_idx = buffer[1];
+    int room_idx = buffer[2];
+    char username[128];
+
+    sscanf(buffer + 3, "%s", username);
+
+    flush_buffer();
+    sprintf(buffer, "%c%s", QUIT, username);
+
+    broad_cast_room_except(rooms[room_idx], user_idx, buffer);
+}
+
 void handle_client_request(void *arg) {
     pthread_mutex_lock(&buffer_mutex);
     char local_buffer[BUFFER_SIZE];
@@ -299,8 +312,11 @@ void handle_client_request(void *arg) {
             break;
 
         case MESSAGE:
-            printf("Incomming message\n");
             handle_message(local_buffer);
+            break;
+
+        case QUIT:
+            handle_quit(local_buffer);
             break;
 
         default:

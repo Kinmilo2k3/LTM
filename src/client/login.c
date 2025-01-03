@@ -22,6 +22,7 @@ void display_alert(const char *title, const char *content) {
 }
 
 void on_exit_clicked(GtkWidget *widget, gpointer data) {
+    send_quit();
     g_print("[EXIT] Exiting the application...\n");
     gtk_main_quit();
 }
