@@ -3,6 +3,7 @@ test*
 .DS_Store
 build
 *.backup
+bin
 
 # Prerequisites
 *.d

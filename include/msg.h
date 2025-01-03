@@ -15,7 +15,10 @@ typedef enum {
     SIGNUP_RESULT,
     RETURN_CODE,
     JOIN_RESPONSE,
-    ROOM_NUM_USERS_UPDATE,
+
+    // common
+    MESSAGE,
+    JOIN_NOTI
 } flag_t;
 
 typedef enum {

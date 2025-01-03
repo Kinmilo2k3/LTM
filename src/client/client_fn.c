@@ -1,6 +1,5 @@
 #include "client_fn.h"
 
-#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +37,7 @@ int send_login_request(const char *username, const char *password) {
     recvfrom(sockfd, buffer, BUFFER_SIZE, 0, NULL, NULL);
 
     if (buffer[0] == LOGIN_RESULT && buffer[1] == SUCESS) {
-        return 1;
+        return 0;
     }
 
     return -1;
@@ -52,23 +51,25 @@ int send_create_account_request(const char *username, const char *password) {
     recvfrom(sockfd, buffer, BUFFER_SIZE, 0, NULL, NULL);
 
     if (buffer[0] == SIGNUP_RESULT && buffer[1] == SUCESS) {
-        return 1;
+        return 0;
     }
 
     return -1;
 }
 
 int send_join_request() {
-    flush_buffer();
-    sprintf(buffer, "%c%6s", (char)JOIN_REQUEST, room_code);
+    extern char user_logged_in[];
 
-    sendto(sockfd, buffer, 1 + RCODE_LEN, 0, (const struct sockaddr *)&servaddr, sizeof(servaddr));
+    flush_buffer();
+    sprintf(buffer, "%c%s %s", JOIN_REQUEST, room_code, user_logged_in);
+
+    sendto(sockfd, buffer, BUFFER_SIZE, 0, (const struct sockaddr *)&servaddr, sizeof(servaddr));
     recvfrom(sockfd, buffer, BUFFER_SIZE, 0, NULL, NULL);
 
     if (buffer[0] == JOIN_RESPONSE && buffer[1] == SUCESS) {
         user_idx = (int)buffer[2];
         room_idx = (int)buffer[3];
-        return 1;
+        return 0;
     }
     return -1;
 }
@@ -84,8 +85,30 @@ int request_room_code() {
     if (buffer[0] == RETURN_CODE && buffer[1] == SUCESS) {
         strncpy(room_code, buffer + 2, RCODE_LEN);
         room_idx = (int)buffer[3 + RCODE_LEN];
-        return 1;
+        return 0;
     }
 
     return -1;
+}
+
+int send_message(const char *msg) {
+    if (strlen(msg) <= 0) return -1;
+
+    extern char room_code[];
+    extern int user_idx;
+    extern int room_idx;
+    extern char user_logged_in[];
+
+    // <MESSAGE><user idx><room idx: 128><username|message>
+
+    flush_buffer();
+    buffer[0] = MESSAGE;
+    sprintf(buffer, "%c%c%c", MESSAGE, user_idx, room_idx);
+
+    sprintf(buffer + 3, "%s", user_logged_in);
+    sprintf(buffer + 131, "%s", msg);
+
+    sendto(sockfd, buffer, BUFFER_SIZE, 0, (const struct sockaddr *)&servaddr, sizeof(servaddr));
+
+    return 0;
 }

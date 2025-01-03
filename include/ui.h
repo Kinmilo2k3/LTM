@@ -5,9 +5,7 @@
 #include <stdbool.h>
 
 void display_login_screen();
-
 void display_home_screen();
-
 void display_chatbox();    
 
 #endif

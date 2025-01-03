@@ -9,7 +9,7 @@
 #include "msg.h"
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 4096
 #define MAX_CLIENTS 4
 #define MAX_ROOMS 10
 #define INFO_MAXLEN 128
@@ -44,7 +44,7 @@ int randint(int lower, int upper) {
 
 void flush_buffer() { memset(buffer, 0, BUFFER_SIZE); }
 
-void broadcast_room(room_t room) {
+void broadcast_room(room_t room, char *buffer) {
     struct sockaddr *addr;
 
     for (int i = 0; i < room.num_clients; i++) {
@@ -53,7 +53,7 @@ void broadcast_room(room_t room) {
     }
 }
 
-void broad_cast_room_except(room_t room, int except_client_idx) {
+void broad_cast_room_except(room_t room, int except_client_idx, char *buffer) {
     struct sockaddr *addr;
 
     for (int i = 0; i < room.num_clients; i++) {
@@ -220,10 +220,11 @@ void handle_join_request(char *buffer) {
     // Received buffer: <JOIN_REQUEST><room code>
 
     char room_code[RCODE_LEN];
-    char result = (char)FAILED;
+    char result = FAILED;
     int num_clients;
+    char username[128];
 
-    strncpy(room_code, buffer + 1, RCODE_LEN);
+    sscanf(buffer + 1, "%s %s", room_code, username);
 
     int i;
     for (i = 0; i < MAX_ROOMS; i++) {
@@ -246,8 +247,28 @@ void handle_join_request(char *buffer) {
     
     // Buffer to send: <ROOM_NUM_USERS_UPDATE>
     flush_buffer();
-    sprintf(buffer, "%c", ROOM_NUM_USERS_UPDATE);
-    broad_cast_room_except(rooms[i], num_clients);
+    sprintf(buffer, "%c%s", JOIN_NOTI, username);
+    broad_cast_room_except(rooms[i], num_clients, buffer);
+}
+
+void handle_message(char *buffer) {
+    // <MESSAGE><user idx><room idx><username|message>
+    int user_idx, room_idx;
+    char username[128];
+    char message[4000];
+
+    user_idx = (int)buffer[1];
+    room_idx = (int)buffer[2];
+
+    sscanf(buffer + 3, "%s", username);
+    strncpy(message, buffer + 131, strlen(buffer + 131));
+
+    flush_buffer();
+    buffer[0] = MESSAGE;
+    sprintf(buffer + 1, "%s", username);
+    sprintf(buffer + 129, "%s", message);
+
+    broad_cast_room_except(rooms[room_idx], user_idx, buffer);
 }
 
 void handle_client_request(void *arg) {
@@ -270,12 +291,16 @@ void handle_client_request(void *arg) {
             break;
 
         case CODE_REQUEST:
-            printf("Code request\n");
             handle_code_request(local_buffer);
             break;
 
         case JOIN_REQUEST:
             handle_join_request(local_buffer);
+            break;
+
+        case MESSAGE:
+            printf("Incomming message\n");
+            handle_message(local_buffer);
             break;
 
         default:

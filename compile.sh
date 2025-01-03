@@ -1,4 +1,6 @@
-clang -o build/client \
+mkdir -p bin
+
+clang -o bin/client \
 src/client/*.c \
 -ggdb3 \
 --std=c11 \
@@ -6,4 +8,4 @@ src/client/*.c \
 -I./include \
 `pkg-config --cflags --libs gtk+-3.0`
 
-clang -o build/server src/server/*.c -Iinclude
+clang -o bin/server src/server/*.c -Iinclude
